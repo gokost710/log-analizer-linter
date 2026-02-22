@@ -31,6 +31,6 @@ go.work.sum
 .idea/
 # .vscode/
 
-./bin/*
+/bin/*
 
 backend_golang_testovoe.pdf
