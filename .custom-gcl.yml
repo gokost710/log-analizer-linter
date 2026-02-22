@@ -1,0 +1,8 @@
+version: v2.10.1
+name: custom-gcl
+destination: ./bin
+
+plugins:
+  - module: github.com/gokost710/log-analizer-linter
+    import: github.com/gokost710/log-analizer-linter
+    version: v1.0.0

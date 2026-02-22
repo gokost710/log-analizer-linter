@@ -1,11 +1,19 @@
-version: 2
+version: "2"
 
 linters:
+  default: none
   enable:
-    - loglint
-    - govet
-    - errcheck
+    - gologanalizer
 
-linters-settings:
-  loglint:
-    enabled: true
+  settings:
+    custom:
+      gologanalizer:
+        type: "module"
+        check-lowercase: true
+        check-english: true
+        check-symbols: true
+        check-sensitive: true
+        sensitive-patterns:
+            - "(?i)password"
+            - "(?i)token"
+            - "(?i)api[_-]?key"

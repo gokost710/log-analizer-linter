@@ -115,6 +115,7 @@ Golang линтер для анализа и исправления некорр
 
    linters-settings:
      gologanalyzer:
+       type: "module"
        check-lowercase: true
        check-english: true
        check-symbols: true
