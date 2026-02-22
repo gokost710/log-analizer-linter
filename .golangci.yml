@@ -9,10 +9,11 @@ linters:
     custom:
       gologanalizer:
         type: "module"
+        description: "My custom log analyzer"
         settings:
-          # check-lowercase: true
-          # check-english: true
-          # check-symbols: true
+          check-lowercase: true
+          check-english: true
+          check-symbols: true
           check-sensitive: true
           sensitive-patterns:
             - "(?i)password"
