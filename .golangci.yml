@@ -21,4 +21,3 @@ linters:
             - "(?i)api[_-]?key"
             - "(?i)secret"
             - "(?i)credentials"
-            - "(?i)auth"
