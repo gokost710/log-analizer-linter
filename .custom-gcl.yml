@@ -3,9 +3,9 @@ name: custom-gcl
 destination: ./bin
 
 plugins:
-#  - module: github.com/gokost710/log-analizer-linter
-#    import: github.com/gokost710/log-analizer-linter
-#    version: v1.0.1
+ - module: github.com/gokost710/log-analizer-linter
+   import: github.com/gokost710/log-analizer-linter
+   version: v1.1.0
 
-    - module: 'github.com/gokost710/log-analizer-linter'
-      path: /home/ilya/log-analizer-linter
+    # - module: 'github.com/gokost710/log-analizer-linter'
+    #   path: /home/ilya/log-analizer-linter
