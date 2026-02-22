@@ -19,12 +19,12 @@ Golang линтер для анализа и исправления некорр
    slog.Error("Failed to connect to database")
    ```
    
-    ✅ Правильно
+   ✅ Правильно
 
-    ```go
-    log.Info("starting server on port 8080")
-    slog.Error("failed to connect to database")
-    ```
+   ```go
+   log.Info("starting server on port 8080")
+   slog.Error("failed to connect to database")
+   ```
 
 2. **Сообщения должны быть на английском языке**
 
@@ -168,3 +168,4 @@ CI запускается при push и pull request.
 ---
 
 ## Примеры использования
+![qwe](materials/image.png)
