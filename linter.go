@@ -173,83 +173,6 @@ func (p *Plugin) analyzeLogCall(pass *analysis.Pass, methodName string, args []a
 	}
 }
 
-func (p *Plugin) checkValue(pass *analysis.Pass, expr ast.Expr, isMessage bool) {
-	if p.settings == nil {
-		return
-	}
-
-	lit, ok := expr.(*ast.BasicLit)
-	if !ok || lit.Kind != token.STRING {
-		return
-	}
-
-	orig, err := strconv.Unquote(lit.Value)
-	if err != nil || orig == "" {
-		return
-	}
-
-	var diags []analysis.Diagnostic
-	fixed := orig
-
-	if isMessage && p.settings.CheckLowercase {
-		runes := []rune(orig)
-		if len(runes) > 0 && unicode.IsUpper(runes[0]) {
-			diags = append(diags, analysis.Diagnostic{
-				Pos:     lit.Pos() + 1,
-				End:     lit.Pos() + 1 + token.Pos(len(string(runes[0]))),
-				Message: fmt.Sprintf("gologanalizer: message %q starts with uppercase", orig),
-			})
-			fixed = lowercaseFirstRune(fixed)
-		}
-	}
-	if p.settings.CheckEnglish {
-		nonEnglish, firstOff := collectNonEnglishLetters(orig)
-		if nonEnglish != "" {
-			diags = append(diags, analysis.Diagnostic{
-				Pos:     lit.Pos() + 1 + token.Pos(firstOff),
-				Message: fmt.Sprintf("gologanalizer: forbidden non-english characters found: %s", nonEnglish),
-			})
-			fixed = removeNonEnglishLetters(fixed)
-		}
-	}
-	if p.settings.CheckSymbols {
-		badSymbols := collectBadSymbols(orig)
-		if badSymbols != "" {
-			diags = append(diags, analysis.Diagnostic{
-				Pos:     lit.Pos() + 1,
-				Message: fmt.Sprintf("gologanalizer: message contains emojis or special symbols: %s", badSymbols),
-			})
-			fixed = removeBadSymbols(fixed)
-		}
-	}
-	if p.settings.CheckSensitive {
-		matches := collectSensitiveMatches(orig, p.compiledPatterns)
-		if len(matches) > 0 {
-			diags = append(diags, analysis.Diagnostic{
-				Pos:      lit.Pos() + 1,
-				Category: "security",
-				Message:  fmt.Sprintf("gologanalizer: POTENTIAL SENSITIVE DATA EXPOSURE (matched: %s)", strings.Join(matches, ", ")),
-			})
-			fixed = redactSensitive(fixed, p.compiledPatterns)
-		}
-	}
-
-	if len(diags) == 0 {
-		return
-	}
-
-	if edit := buildLiteralFix(lit, fixed); edit != nil {
-		diags[0].SuggestedFixes = []analysis.SuggestedFix{{
-			Message:   "apply gologanalizer automatic fix",
-			TextEdits: []analysis.TextEdit{*edit},
-		}}
-	}
-
-	for _, d := range diags {
-		pass.Report(d)
-	}
-}
-
 func lowercaseFirstRune(s string) string {
 	runes := []rune(s)
 	if len(runes) == 0 {
@@ -259,66 +182,21 @@ func lowercaseFirstRune(s string) string {
 	return string(runes)
 }
 
-func collectNonEnglishLetters(s string) (string, int) {
-	var nonEnglish []rune
-	firstByteOff := -1
-
-	for i, r := range s {
-		if r > 127 && !unicode.In(r, unicode.Latin) {
-			if firstByteOff == -1 {
-				firstByteOff = i
-			}
-			nonEnglish = append(nonEnglish, r)
-		}
-	}
-
-	if firstByteOff == -1 {
-		return "", 0
-	}
-
-	return string(nonEnglish), firstByteOff
-}
-
-func removeNonEnglishLetters(s string) string {
-	var filtered []rune
-	for _, r := range []rune(s) {
-		if r > 127 && !unicode.In(r, unicode.Latin) {
-			continue
-		}
-		filtered = append(filtered, r)
-	}
-	return string(filtered)
-}
-
-func collectBadSymbols(s string) string {
-	var bad []rune
-	for _, r := range []rune(s) {
-		if r > 127 && (!unicode.IsLetter(r) && !unicode.IsDigit(r) || unicode.In(r, unicode.Greek)) {
-			bad = append(bad, r)
-		}
-	}
-	return string(bad)
-}
-
-func removeBadSymbols(s string) string {
-	var filtered []rune
-	for _, r := range []rune(s) {
-		if r > 127 && (!unicode.IsLetter(r) && !unicode.IsDigit(r) || unicode.In(r, unicode.Greek)) {
-			continue
-		}
-		filtered = append(filtered, r)
-	}
-	return string(filtered)
-}
-
-func collectSensitiveMatches(s string, patterns []*regexp.Regexp) []string {
+func collectSensitiveMatches(s string, patterns []*regexp.Regexp) ([]string, int) {
 	var matches []string
+	firstOff := -1
+
 	for _, re := range patterns {
-		if re.MatchString(s) {
-			matches = append(matches, re.String())
+		loc := re.FindStringIndex(s)
+		if loc != nil {
+			if firstOff == -1 || loc[0] < firstOff {
+				firstOff = loc[0]
+			}
+			name := strings.TrimPrefix(re.String(), "(?i)")
+			matches = append(matches, name)
 		}
 	}
-	return matches
+	return matches, firstOff
 }
 
 func redactSensitive(s string, patterns []*regexp.Regexp) string {
@@ -348,4 +226,151 @@ func buildLiteralFix(lit *ast.BasicLit, newVal string) *analysis.TextEdit {
 		End:     lit.End(),
 		NewText: []byte(newLiteral),
 	}
+}
+
+func (p *Plugin) checkValue(pass *analysis.Pass, expr ast.Expr, isMessage bool) {
+	if p.settings == nil {
+		return
+	}
+
+	if bin, ok := expr.(*ast.BinaryExpr); ok && bin.Op == token.ADD {
+		p.checkValue(pass, bin.X, isMessage)
+		p.checkValue(pass, bin.Y, isMessage)
+		return
+	}
+
+	lit, ok := expr.(*ast.BasicLit)
+	if !ok || lit.Kind != token.STRING {
+		return
+	}
+
+	orig, err := strconv.Unquote(lit.Value)
+	if err != nil || orig == "" {
+		return
+	}
+
+	if isMessage && p.settings.CheckLowercase {
+		runes := []rune(orig)
+		if len(runes) > 0 && unicode.IsUpper(runes[0]) {
+			pass.Report(analysis.Diagnostic{
+				Pos:     lit.Pos() + 1,
+				Message: fmt.Sprintf("message %q starts with uppercase", orig),
+				SuggestedFixes: []analysis.SuggestedFix{{
+					Message: "lowercase first letter",
+					TextEdits: []analysis.TextEdit{
+						*buildLiteralFix(lit, lowercaseFirstRune(orig)),
+					},
+				}},
+			})
+		}
+	}
+
+	if p.settings.CheckEnglish {
+		nonEnglish, firstOff := collectNonEnglishLetters(orig)
+		if nonEnglish != "" {
+			pass.Report(analysis.Diagnostic{
+				Pos:     lit.Pos() + 1 + token.Pos(firstOff),
+				Message: fmt.Sprintf("forbidden non-english characters found: {%s}", nonEnglish),
+				SuggestedFixes: []analysis.SuggestedFix{{
+					Message: "remove non-english letters",
+					TextEdits: []analysis.TextEdit{
+						*buildLiteralFix(lit, removeNonEnglishLetters(orig)),
+					},
+				}},
+			})
+		}
+	}
+
+	if p.settings.CheckSymbols {
+		badSymbols, firstOff := collectBadSymbols(orig)
+		if badSymbols != "" {
+			pass.Report(analysis.Diagnostic{
+				Pos:     lit.Pos() + 1 + token.Pos(firstOff),
+				Message: fmt.Sprintf("message contains emojis or special symbols: {%s}", badSymbols),
+				SuggestedFixes: []analysis.SuggestedFix{{
+					Message: "remove special symbols",
+					TextEdits: []analysis.TextEdit{
+						*buildLiteralFix(lit, removeBadSymbols(orig)),
+					},
+				}},
+			})
+		}
+	}
+
+	if p.settings.CheckSensitive {
+		matches, firstOff := collectSensitiveMatches(orig, p.compiledPatterns)
+		if len(matches) > 0 {
+			diag := analysis.Diagnostic{
+				Pos:      lit.Pos() + 1 + token.Pos(firstOff),
+				Category: "security",
+				Message:  fmt.Sprintf("potential sensitive data exposure (found: %s)", strings.Join(matches, ", ")),
+			}
+
+			if edit := buildLiteralFix(lit, redactSensitive(orig, p.compiledPatterns)); edit != nil {
+				diag.SuggestedFixes = []analysis.SuggestedFix{{
+					Message:   "redact sensitive data",
+					TextEdits: []analysis.TextEdit{*edit},
+				}}
+			}
+			pass.Report(diag)
+		}
+	}
+}
+
+func collectNonEnglishLetters(s string) (string, int) {
+	var bad []rune
+	firstByteOff := -1
+	for i, r := range s {
+		if unicode.IsLetter(r) && r > 127 {
+			if firstByteOff == -1 {
+				firstByteOff = i
+			}
+			bad = append(bad, r)
+		}
+	}
+	if firstByteOff == -1 {
+		return "", 0
+	}
+	return string(bad), firstByteOff
+}
+
+func removeNonEnglishLetters(s string) string {
+	var filtered []rune
+	for _, r := range s {
+		if unicode.IsLetter(r) {
+			if r <= 127 {
+				filtered = append(filtered, r)
+			}
+			continue
+		}
+		filtered = append(filtered, r)
+	}
+	return string(filtered)
+}
+
+func collectBadSymbols(s string) (string, int) {
+	var bad []rune
+	firstByteOff := -1
+	for i, r := range s {
+		if unicode.IsPunct(r) || (!unicode.IsLetter(r) && !unicode.IsDigit(r) && !unicode.IsSpace(r)) {
+			if firstByteOff == -1 {
+				firstByteOff = i
+			}
+			bad = append(bad, r)
+		}
+	}
+	if firstByteOff == -1 {
+		return "", 0
+	}
+	return string(bad), firstByteOff
+}
+
+func removeBadSymbols(s string) string {
+	var filtered []rune
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) {
+			filtered = append(filtered, r)
+		}
+	}
+	return string(filtered)
 }
