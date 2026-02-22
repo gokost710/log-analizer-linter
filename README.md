@@ -1,8 +1,8 @@
 # gologanalizer
-Golang линтер для анализа логов.
+Golang линтер для анализа и исправления некорректных логов в проекте. Имеет гибкую настройку и интеграцию с [golangci-lint](https://github.com/golangci/golangci-lint).
 
 ## Описание
-Линтер анализирует вызовы логгеров и проверяет текст лог-сообщений на соответствие заданным правилам.
+Линтер анализирует вызовы логгеров и проверяет текст лог-сообщений на соответствие заданным правилам. При использовании флага `--fix` исправляет ошибки.
 
 Поддерживаемые логгеры:
 - [log/slog](https://pkg.go.dev/log/slog)
@@ -12,112 +12,72 @@ Golang линтер для анализа логов.
 
 ## Проверяемые правила
 1. **Сообщения должны начинаться со строчной буквы**
-    
-    <table>
-    <thead><tr><th>❌ Неправильно</th><th>✅ Правильно</th></tr></thead>
-    <tbody>
-    <tr><td>
-    
-    ```go
-    log.Info("Starting server on port 8080")
-    slog.Error("Failed to connect to database")
-    ```
-    
-    </td><td>
-    
+
+   ❌ Неправильно
+   ```go
+   log.Info("Starting server on port 8080")
+   slog.Error("Failed to connect to database")
+   ```
+   
+    ✅ Правильно
+
     ```go
     log.Info("starting server on port 8080")
     slog.Error("failed to connect to database")
     ```
-    
-    </td></tr>
-    
-    </tbody>
-    </table>
 
 2. **Сообщения должны быть на английском языке**
-    
-    <table>
-    <thead><tr><th>❌ Неправильно</th><th>✅ Правильно</th></tr></thead>
-    <tbody>
-    <tr><td>
-    
+
+   ❌ Неправильно
     ```go
     log.Info("запуск сервера")
     log.Error("ошибка подключения к базе данных")
     ```
-    
-    </td><td>
-    
+
+   ✅ Правильно
+
     ```go
     log.Info("starting server")
     log.Error("failed to connect to database")
     ```
-    
-    </td></tr>
-    
-    </tbody>
-    </table>
 
 3. **Запрещены спецсимволы и эмодзи**
-    
-    <table>
-    <thead><tr><th>❌ Неправильно</th><th>✅ Правильно</th></tr></thead>
-    <tbody>
-    <tr><td>
-    
+
+   ❌ Неправильно
     ```go
     log.Info("server started!🚀")
     log.Error("connection failed!!!")
     log.Warn("warning: something went wrong...")
     ```
     
-    </td><td>
-    
+   ✅ Правильно
+
     ```go
     log.Info("server started")
     log.Error("connection failed")
     log.Warn("something went wrong")
     ```
-    
-    </td></tr>
-    
-    </tbody>
-    </table>
 
 4. Запрещены потенциально чувствительные данные
-    
-    <table>
-    <thead><tr><th>❌ Неправильно</th><th>✅ Правильно</th></tr></thead>
-    <tbody>
-    <tr><td>
-    
+   
+   ❌ Неправильно
     ```go
     log.Info("user password: " + password)
     log.Debug("api_key=" + apiKey)
     log.Info("token: " + token)
     ```
-    
-    </td><td>
+
+   ✅ Правильно
     
     ```go
     log.Info("user authenticated successfully")
     log.Debug("api request completed")
     log.Info("token validated")
     ```
-    
-    </td></tr>
-    
-    </tbody>
-    </table>
-
 ---
-
 ## Требования
-
  - [golang](https://github.com/golang/go) v1.26+
  - [golangci-lint](https://github.com/golangci/golangci-lint) v2+
-
 ---
 ## Установка и подключение
 
@@ -141,13 +101,13 @@ Golang линтер для анализа логов.
    golangci-lint custom
    ```
 
-   _Будет создан бинарник:_
+   Будет создан бинарник:
 
    ```bash
    ./bin/custom-gcl
    ```
 
-3. **Включить линтер в .golangci.yml**
+3. **Включить линтер в `.golangci.yml`**
    ```yaml
    linters:
      enable:
@@ -170,6 +130,8 @@ Golang линтер для анализа логов.
    ./bin/custom-gcl run ./...
    ```
 
+---
+
 ## Конфигурация
    
    | Параметр           | Описание                        | Значение по умолчанию |
@@ -180,11 +142,15 @@ Golang линтер для анализа логов.
    | check-sensitive    | Проверка чувствительных данных  | true                  |
    | sensitive-patterns | Пользовательские regex-паттерны | -                     |
 
+---
+
 ## Авто-исправление
 Для автоматического исправления запускать с флагом `--fix`
 ```shell
 ./bin/custom-gcl run --fix ./...
 ```
+
+---
 
 ## CI/CD
 
@@ -194,3 +160,7 @@ Golang линтер для анализа логов.
 - проверяет корректность сборки
 
 CI запускается при push и pull request.
+
+---
+
+## Примеры использования
