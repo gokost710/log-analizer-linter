@@ -64,7 +64,7 @@ func TestVerifySensitive(t *testing.T) {
 		{"Uppercase password", "PASSWORD_HERE", true},
 		{"Token check", "found a token!", true},
 		{"Substring match", "mytokenisgreat", true},
-		{"Safe word", "passing through", false}, // "pass" в словый "passing" не должно триггерить если регекс строгий, но у нас (?i)password
+		{"Safe word", "passing through", false},
 	}
 
 	for _, tt := range tests {

@@ -41,7 +41,6 @@ func init() {
 }
 
 func New(settings any) (register.LinterPlugin, error) {
-	// дефолтные настройки
 	s := MySettings{
 		CheckLowercase: true,
 		CheckEnglish:   true,
@@ -54,7 +53,6 @@ func New(settings any) (register.LinterPlugin, error) {
 		if err != nil {
 			return nil, err
 		}
-		// теперь учитываются все значения, включая false
 		s = mergeSettings(s, decoded)
 	}
 
@@ -73,7 +71,6 @@ func New(settings any) (register.LinterPlugin, error) {
 	return p, nil
 }
 
-// mergeSettings теперь прямо берет значения из user, включая false
 func mergeSettings(def, user MySettings) MySettings {
 	def.CheckLowercase = user.CheckLowercase
 	def.CheckEnglish = user.CheckEnglish
