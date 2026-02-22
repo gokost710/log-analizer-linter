@@ -124,7 +124,6 @@ Golang линтер для анализа и исправления некорр
         - "(?i)api[_-]?key"
         - "(?i)secret"
         - "(?i)credentials"
-        - "(?i)auth"
    ```
    *Каждое правило и паттерн чувствительных данных требует явного подключения в конфиг файле*
 
@@ -144,13 +143,13 @@ Golang линтер для анализа и исправления некорр
    
    | Параметр           | Описание                        | Значение по умолчанию |
    |--------------------|---------------------------------|-----------------------|
-   | check-lowercase    | Проверка строчной буквы         | true                  |
-   | check-english      | Проверка английского языка      | true                  |
-   | check-symbols      | Проверка спецсимволов           | true                  |
-   | check-sensitive    | Проверка чувствительных данных  | true                  |
+   | check-lowercase    | Проверка строчной буквы         | false                 |
+   | check-english      | Проверка английского языка      | false                 |
+   | check-symbols      | Проверка спецсимволов           | false                 |
+   | check-sensitive    | Проверка чувствительных данных  | false                 |
    | sensitive-patterns | Пользовательские regex-паттерны | -                     |
    
-   Шаблоны чувствительных данных принимаются только через параметр `sensitive-patterns`. По умолчанию пустые.
+   Шаблоны чувствительных данных принимаются только через параметр `sensitive-patterns`. По умолчанию пустой.
 
 ---
 
@@ -167,6 +166,27 @@ Golang линтер для анализа и исправления некорр
 
 ---
 
+# Быстрый запуск
+
+Проверка выполняется в docker контейнере на `testdata/logs.go`. 
+
+Запуск docker:
+```shell
+make up-docker
+```
+
+Сборка проекта:
+```shell
+make build
+```
+
+Запуск проекта:
+```shell
+make run
+```
+
+---
+
 ## CI/CD
 
 В репозитории настроен CI, который:
@@ -179,4 +199,29 @@ CI запускается при push и pull request.
 ---
 
 ## Примеры использования
-![qwe](materials/image.png)
+Файл конфигурации:
+
+![](materials/config.png)
+
+Пример `check-lowercase`:
+
+![](materials/check-lowercase.png)
+
+Пример `check-english`:
+
+![](materials/check-english.png)
+
+Пример `check-symbols`:
+
+![](materials/check-symbols.png)
+
+Пример `check-sensitive`:
+
+![](materials/check-sensitive.png)
+
+Автоисправление с `--fix`:
+
+![](materials/fixflag.png)
+
+*Не исправляет ошибки `check-sensitive`*
+
