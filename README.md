@@ -92,9 +92,8 @@ Golang линтер для анализа и исправления некорр
    plugins:
      - module: github.com/gokost710/log-analizer-linter
        import: github.com/gokost710/log-analizer-linter
-       version: v1.1.0
+       version: v2.0.0
    ```
-
 
 2. **Собрать кастомный golangci-lint**
    ```bash
@@ -115,20 +114,28 @@ Golang линтер для анализа и исправления некорр
 
    linters-settings:
      gologanalyzer:
-       type: "module"
        check-lowercase: true
        check-english: true
        check-symbols: true
        check-sensitive: true
        sensitive-patterns:
-         - "(?i)password"
-         - "(?i)token"
-         - "(?i)api[_-]?key"
+        - "(?i)password"
+        - "(?i)token"
+        - "(?i)api[_-]?key"
+        - "(?i)secret"
+        - "(?i)credentials"
+        - "(?i)auth"
    ```
+   *Каждое правило и паттерн чувствительных данных требует явного подключения в конфиг файле*
 
 4. **Запуск**
    ```bash
    ./bin/custom-gcl run ./...
+   ```
+   
+   Тестовый файл есть в директории `testdata/`
+   ```shell
+   ./bin/custom-gcl run ./testdata/logs.go
    ```
 
 ---
@@ -136,7 +143,7 @@ Golang линтер для анализа и исправления некорр
 ## Конфигурация
    
    | Параметр           | Описание                        | Значение по умолчанию |
-   | ------------------ | ------------------------------- |-----------------------|
+   |--------------------|---------------------------------|-----------------------|
    | check-lowercase    | Проверка строчной буквы         | true                  |
    | check-english      | Проверка английского языка      | true                  |
    | check-symbols      | Проверка спецсимволов           | true                  |
@@ -145,13 +152,17 @@ Golang линтер для анализа и исправления некорр
    
    Шаблоны чувствительных данных принимаются только через параметр `sensitive-patterns`. По умолчанию пустые.
 
-
 ---
 
 ## Авто-исправление
 Для автоматического исправления запускать с флагом `--fix`
 ```shell
 ./bin/custom-gcl run --fix ./...
+```
+
+На примере тестовых данных 
+```shell
+./bin/custom-gcl run --fix ./testdata/logs.go
 ```
 
 ---
