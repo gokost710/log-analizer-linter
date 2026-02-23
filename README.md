@@ -202,23 +202,23 @@ Email: kostikoff613@gmail.com
 
 ![](materials/config.png)
 
-#### Пример `check-lowercase`:
+#### Правило `check-lowercase`:
 
 ![](materials/check-lowercase.png)
 
-#### Пример `check-english`:
+#### Правило`check-english`:
 
 ![](materials/check-english.png)
 
-#### Пример `check-symbols`:
+#### Правило `check-symbols`:
 
 ![](materials/check-symbols.png)
 
-#### Пример `check-sensitive`:
+#### Правило `check-sensitive`:
 
 ![](materials/check-sensitive.png)
 
-#### Автоисправление с `--fix`:
+#### Авто-исправление с `--fix`:
 
 ![](materials/fixflag.png)
 
