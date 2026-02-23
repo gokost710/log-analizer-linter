@@ -8,7 +8,6 @@ Golang линтер для анализа и исправления некорр
 - [log/slog](https://pkg.go.dev/log/slog)
 - [go.uber.org/zap](https://github.com/uber-go/zap)
 
----
 
 ## Применяемые правила
 1. **Сообщения должны начинаться со строчной буквы**
@@ -74,11 +73,10 @@ Golang линтер для анализа и исправления некорр
     log.Debug("api request completed")
     log.Info("token validated")
     ```
----
 ## Требования
  - [golang](https://github.com/golang/go) v1.26+
  - [golangci-lint](https://github.com/golangci/golangci-lint) v2+
----
+   
 ## Установка и подключение
 
 Линтер подключается как модульный плагин golangci-lint.
@@ -137,7 +135,6 @@ Golang линтер для анализа и исправления некорр
    ./bin/custom-gcl run ./testdata/logs.go
    ```
 
----
 
 ## Конфигурация
    
@@ -151,7 +148,7 @@ Golang линтер для анализа и исправления некорр
    
    Шаблоны чувствительных данных принимаются только через параметр `sensitive-patterns`. По умолчанию пустой.
 
----
+
 
 ## Авто-исправление
 Для автоматического исправления запускать с флагом `--fix`
@@ -164,9 +161,8 @@ Golang линтер для анализа и исправления некорр
 ./bin/custom-gcl run --fix ./testdata/logs.go
 ```
 
----
 
-# Быстрый запуск
+## Быстрый запуск
 
 Проверка выполняется в docker контейнере на `testdata/logs.go`. 
 
@@ -185,7 +181,6 @@ make build
 make run
 ```
 
----
 
 ## CI/CD
 
@@ -196,40 +191,39 @@ make run
 
 CI запускается при push и pull request.
 
----
+## Связь со мной
+
+Tg: https://t.me/foly479
+
+Email: kostikoff613@gmail.com
 
 ## Примеры использования
-Файл конфигурации:
+#### Файл конфигурации:
 
 ![](materials/config.png)
 
-Пример `check-lowercase`:
+#### Пример `check-lowercase`:
 
 ![](materials/check-lowercase.png)
 
-Пример `check-english`:
+#### Пример `check-english`:
 
 ![](materials/check-english.png)
 
-Пример `check-symbols`:
+#### Пример `check-symbols`:
 
 ![](materials/check-symbols.png)
 
-Пример `check-sensitive`:
+#### Пример `check-sensitive`:
 
 ![](materials/check-sensitive.png)
 
-Автоисправление с `--fix`:
+#### Автоисправление с `--fix`:
 
 ![](materials/fixflag.png)
 
-*Не исправляет ошибки `check-sensitive`*
+| *Не исправляет ошибки `check-sensitive`*
 
-Результаты unit-тестирования:
+#### Результаты unit-тестирования:
 
 ![](materials/tests.png)
-
----
-
-Tg: https://t.me/foly479
-Email: kostikoff613@gmail.com
