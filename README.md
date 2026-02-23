@@ -92,7 +92,7 @@ Golang линтер для анализа и исправления некорр
    plugins:
      - module: github.com/gokost710/log-analizer-linter
        import: github.com/gokost710/log-analizer-linter
-       version: v2.0.0
+       version: v2.0.2
    ```
 
 2. **Собрать кастомный golangci-lint**
