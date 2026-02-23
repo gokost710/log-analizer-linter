@@ -90,8 +90,8 @@ Golang линтер для анализа и исправления некорр
    destination: ./bin
 
    plugins:
-     - module: github.com/gokost710/log-analizer-linter
-       import: github.com/gokost710/log-analizer-linter
+     - module: github.com/gokost710/log-analizer-linter/v2
+       import: github.com/gokost710/log-analizer-linter/v2
        version: v2.0.2
    ```
 
