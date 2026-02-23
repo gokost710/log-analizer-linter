@@ -191,13 +191,8 @@ make run
 
 CI запускается при push и pull request.
 
-## Связь со мной
-
-Tg: https://t.me/foly479
-
-Email: kostikoff613@gmail.com
-
 ## Примеры использования
+
 #### Файл конфигурации:
 
 ![](materials/config.png)
