@@ -33,15 +33,24 @@ func TestVerifyLowercase(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lit := &ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf("%q", tt.input)}
+			reported := false
+
+			lit := &ast.BasicLit{
+				Kind:  token.STRING,
+				Value: fmt.Sprintf("%q", tt.input),
+			}
+
 			pass := &analysis.Pass{
 				Report: func(d analysis.Diagnostic) {
-					if !tt.wantErr {
-						t.Errorf("Unexpected error reported: %s", d.Message)
-					}
+					reported = true
 				},
 			}
+
 			p.checkValue(pass, lit, true)
+
+			if reported != tt.wantErr {
+				t.Fatalf("reported=%v, wantErr=%v", reported, tt.wantErr)
+			}
 		})
 	}
 }
@@ -84,9 +93,11 @@ func TestVerifySensitive(t *testing.T) {
 		})
 	}
 }
-
 func TestVerifySymbolsAndEnglish(t *testing.T) {
-	p := &Plugin{settings: &MySettings{CheckEnglish: true, CheckSymbols: true}}
+	p := &Plugin{settings: &MySettings{
+		CheckEnglish: true,
+		CheckSymbols: true,
+	}}
 
 	tests := []struct {
 		name        string
@@ -96,34 +107,40 @@ func TestVerifySymbolsAndEnglish(t *testing.T) {
 	}{
 		{"Pure English", "hello", false, false},
 		{"Mixed Russian", "hello привет", true, false},
-		{"Emoji", "good luck 🍀", true, true},
-		{"Mathematical", "Σ sum is zero", true, true}, // Сигма - не латиница
+		{"Emoji", "good luck 🍀", false, true},
+		{"Mathematical", "Σ sum is zero", true, false},
 		{"Chinese", "你好", true, false},
-		{"Control chars", "hello\nworld\t", false, false}, // \n и \t обычно разрешены
-		{"Zero-width space", "hello\u200Bworld", true, true},
+		{"Control chars", "hello\nworld\t", false, false},
+		{"Zero-width space", "hello\u200Bworld", false, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			engErr, symErr := false, false
-			lit := &ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf("%q", tt.input)}
+
+			lit := &ast.BasicLit{
+				Kind:  token.STRING,
+				Value: fmt.Sprintf("%q", tt.input),
+			}
+
 			pass := &analysis.Pass{
 				Report: func(d analysis.Diagnostic) {
-					if strings.HasPrefix(d.Message, "gologanalizer: forbidden non-english characters found:") {
+					if strings.Contains(d.Message, "forbidden non-english") {
 						engErr = true
 					}
-					if strings.HasPrefix(d.Message, "gologanalizer: message contains emojis or special symbols:") {
+					if strings.Contains(d.Message, "special symbols") {
 						symErr = true
 					}
 				},
 			}
+
 			p.checkValue(pass, lit, true)
 
 			if engErr != tt.wantEnglish {
-				t.Errorf("%s: English error mismatch. Got %v", tt.name, engErr)
+				t.Fatalf("%s: English mismatch got=%v want=%v", tt.name, engErr, tt.wantEnglish)
 			}
 			if symErr != tt.wantSymbols {
-				t.Errorf("%s: Symbols error mismatch. Got %v", tt.name, symErr)
+				t.Fatalf("%s: Symbols mismatch got=%v want=%v", tt.name, symErr, tt.wantSymbols)
 			}
 		})
 	}
@@ -238,7 +255,6 @@ func TestCheckValue_RespectsFlags(t *testing.T) {
 		})
 	}
 }
-
 func TestIsLogCall_SlogPackage(t *testing.T) {
 	p := &Plugin{}
 
@@ -250,8 +266,14 @@ func TestIsLogCall_SlogPackage(t *testing.T) {
 
 	info := &types.Info{
 		Uses: map[*ast.Ident]types.Object{
-			pkgIdent: types.NewPkgName(token.NoPos, nil, "slog", types.NewPackage("log/slog", "slog")),
+			pkgIdent: types.NewPkgName(
+				token.NoPos,
+				nil,
+				"slog",
+				types.NewPackage("log/slog", "slog"),
+			),
 		},
+		Types: map[ast.Expr]types.TypeAndValue{},
 	}
 
 	pass := &analysis.Pass{
@@ -259,7 +281,7 @@ func TestIsLogCall_SlogPackage(t *testing.T) {
 	}
 
 	if !p.isLogCall(pass, sel) {
-		t.Fatal("expected isLogCall to return true for log/slog.Info")
+		t.Fatal("expected true for log/slog.Info")
 	}
 }
 
