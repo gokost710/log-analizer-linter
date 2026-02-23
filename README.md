@@ -225,3 +225,6 @@ CI запускается при push и pull request.
 
 *Не исправляет ошибки `check-sensitive`*
 
+Результаты unit-тестирования:
+
+![](materials/tests.png)
