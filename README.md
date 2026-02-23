@@ -228,3 +228,8 @@ CI запускается при push и pull request.
 Результаты unit-тестирования:
 
 ![](materials/tests.png)
+
+---
+
+Tg: https://t.me/foly479
+Email: kostikoff613@gmail.com
