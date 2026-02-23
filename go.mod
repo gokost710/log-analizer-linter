@@ -1,4 +1,4 @@
-module github.com/gokost710/log-analizer-linter
+module github.com/gokost710/log-analizer-linter/v2
 
 go 1.26.0
 
